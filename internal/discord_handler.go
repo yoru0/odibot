@@ -2,17 +2,16 @@ package internal
 
 import (
 	"fmt"
-	"log"
 	"os"
 	"os/signal"
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/joho/godotenv"
+	"github.com/yoru0/goodi/pkg"
 )
 
 func StartDiscord() {
-	dg, err := discordgo.New("Bot " + getDiscordToken())
+	dg, err := discordgo.New("Bot " + pkg.GetDiscordToken())
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
 		return
@@ -46,36 +45,35 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	switch m.Content {
-	case "ping":
-		s.ChannelMessageSend(m.ChannelID, "Pong!")
+	case "capsa":
+		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Content: "Capsa on production",
+			Reference: &discordgo.MessageReference{
+				MessageID: m.ID,
+				GuildID:   m.GuildID,
+				ChannelID: m.ChannelID,
+			},
+		})
 
-	case "pong":
-		s.ChannelMessageSend(m.ChannelID, "Ping!")
-
-	case "ping dm":
-		channel, err := s.UserChannelCreate(m.Author.ID)
+	case "dm":
+		dmChannel, err := s.UserChannelCreate(m.Author.ID)
 		if err != nil {
-			fmt.Println("error creating channel:", err)
-			s.ChannelMessageSend(m.ChannelID, "Something went wrong while sending the DM!")
-			return
+			fmt.Println("error creating DM channel:", err)
 		}
-
-		_, err = s.ChannelMessageSend(channel.ID, "Pong!")
-		if err != nil {
-			fmt.Println("error sending DM message:", err)
-			s.ChannelMessageSend(m.ChannelID, "Failed to send you a DM. "+"Did you disable DM in your privacy settings?")
-			return
-		}
+		s.ChannelMessageSendComplex(dmChannel.ID, &discordgo.MessageSend{
+			Content: "Still on production",
+		})
 
 	case "embed":
-		s.ChannelMessageSendEmbed(m.ChannelID, EmbedJoin())
-	}
-}
+		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+			Content: "Here's a reply",
+			Embed:   EmbedJoin(),
+			Reference: &discordgo.MessageReference{
+				MessageID: m.ID,
+				ChannelID: m.ChannelID,
+				GuildID:   m.GuildID,
+			},
+		})
 
-func getDiscordToken() string {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("error loading .env file")
 	}
-	return os.Getenv("DISCORD_TOKEN")
 }
