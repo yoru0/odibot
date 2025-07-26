@@ -5,38 +5,51 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/yoru0/odibot/pkg"
 )
 
+var (
+	botToken  = pkg.GetDiscordToken()
+	channelID = pkg.GetDiscordChannelID()
+	ownerID   = pkg.GetDiscordUserID()
+	quit      = make(chan struct{})
+)
+
 func StartDiscord() {
-	dg, err := discordgo.New("Bot " + pkg.GetDiscordToken())
+	dg, err := discordgo.New("Bot " + botToken)
 	if err != nil {
 		fmt.Println("error creating Discord session,", err)
 		return
 	}
 
 	dg.AddHandler(messageCreate)
-
 	dg.Identify.Intents = discordgo.IntentsGuildMessages | discordgo.IntentsDirectMessages | discordgo.IntentsMessageContent
 
-	err = dg.Open()
-	if err != nil {
-		fmt.Println("error opening connection,", err)
+	if err := dg.Open(); err != nil {
+		fmt.Println("Error opening connection:", err)
 		return
 	}
 
-	channelID := "1396742940612886618"
-	dg.ChannelMessageSend(channelID, "Odi is online")
+	defer dg.Close()
 
 	fmt.Println("Odi is running")
-	sc := make(chan os.Signal, 1)
-	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt)
-	<-sc
+	dg.ChannelMessageSend(channelID, "Odi is now online")
 
-	dg.ChannelMessageSend(channelID, "Bye bye")
-	dg.Close()
+	sc := make(chan os.Signal, 1)
+	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM)
+
+	select {
+	case <-sc:
+		fmt.Println("Shutting down via Ctrl+C")
+	case <-quit:
+		fmt.Println("Shutting down via Discord")
+	}
+
+	dg.ChannelMessageSend(channelID, "Odi is shutting down. Bye bye")
+	fmt.Println("Bot shut down cleanly")
 }
 
 func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -75,5 +88,12 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			},
 		})
 
+	case "exit":
+		if m.Author.ID == ownerID {
+			go func() {
+				time.Sleep(1 * time.Second)
+				quit <- struct{}{}
+			}()
+		}
 	}
 }
