@@ -7,7 +7,7 @@ import (
 	"syscall"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/yoru0/goodi/pkg"
+	"github.com/yoru0/odibot/pkg"
 )
 
 func StartDiscord() {
