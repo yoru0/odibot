@@ -4,12 +4,23 @@ import (
 	"fmt"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
 	"github.com/bwmarrin/discordgo"
 	"github.com/yoru0/odibot/pkg"
 )
+
+type Lobby struct {
+	GuildID     string
+	ChannelID   string
+	HostID      string
+	NumPlayers  int
+	JoinedUsers map[string]bool
+}
+
+var Lobbies = map[string]*Lobby{}
 
 var (
 	botToken  = pkg.GetDiscordToken()
@@ -57,16 +68,16 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
+	content := strings.ToLower(m.Content)
+
+	if strings.HasPrefix(content, "capsa") {
+		HandleCapsaCommand(s, m)
+		return
+	}
+
 	switch m.Content {
-	case "capsa":
-		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content: "Capsa on production",
-			Reference: &discordgo.MessageReference{
-				MessageID: m.ID,
-				GuildID:   m.GuildID,
-				ChannelID: m.ChannelID,
-			},
-		})
+	case "join":
+		HandleJoinCommand(s, m)
 
 	case "dm":
 		dmChannel, err := s.UserChannelCreate(m.Author.ID)
@@ -79,7 +90,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	case "embed":
 		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content: "Here's a reply",
+			Content: "On production",
 			Embed:   EmbedJoin(),
 			Reference: &discordgo.MessageReference{
 				MessageID: m.ID,
@@ -88,7 +99,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 			},
 		})
 
-	case "exit":
+	case "shutdown":
 		if m.Author.ID == ownerID {
 			go func() {
 				time.Sleep(1 * time.Second)
