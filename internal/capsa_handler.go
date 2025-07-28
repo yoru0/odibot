@@ -18,7 +18,7 @@ func HandleCapsaCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	numPlayers, err := strconv.Atoi(args[1])
-	if err != nil || numPlayers < 3 {
+	if err != nil || numPlayers < 2 {
 		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Content: "Enter a valid number (minimal 3)",
 		})
@@ -32,55 +32,22 @@ func HandleCapsaCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	Lobbies[m.ChannelID] = &Lobby{
-		GuildID:     m.GuildID,
-		ChannelID:   m.ChannelID,
-		HostID:      m.Author.ID,
-		NumPlayers:  numPlayers,
-		JoinedUsers: map[string]bool{m.Author.ID: true},
+	Lobbies[m.GuildID] = &Lobby{
+		GuildID:    m.GuildID,
+		ChannelID:  m.ChannelID,
+		HostID:     m.Author.ID,
+		NumPlayers: numPlayers,
+		JoinedUsers: map[string]*Player{
+			m.Author.ID: {
+				ID:       m.Author.ID,
+				Username: m.Author.Username,
+				Joined:   true,
+			},
+		},
 	}
 
 	left := numPlayers - 1
 	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 		Content: fmt.Sprintf("%s started a Capsa game. Type `join` to participate. Waiting for %d more players.", m.Author.Username, left),
 	})
-}
-
-func HandleJoinCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
-	lobby, exists := Lobbies[m.GuildID]
-	if !exists {
-		return
-	}
-
-	// if lobby.JoinedUsers[m.Author.ID] {
-	// 	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-	// 		Content: "You already joined the game",
-	// 	})
-	// 	return
-	// }
-
-	// lobby.JoinedUsers[m.Author.ID] = true
-	left := lobby.NumPlayers - len(lobby.JoinedUsers)
-	if left > 0 {
-		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content: fmt.Sprintf("%s joined! Waiting for %d more...", m.Author.Username, left),
-		})
-		return
-	}
-
-	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-		Content: "All players joined! Starting game...",
-	})
-
-	for userID := range lobby.JoinedUsers {
-		dm, _ := s.UserChannelCreate(userID)
-		s.ChannelMessageSendComplex(dm.ID, &discordgo.MessageSend{
-			Content: "Capsa game started",
-		})
-
-		// TODO Assign Card
-	}
-
-	delete(Lobbies, m.GuildID)
-
 }

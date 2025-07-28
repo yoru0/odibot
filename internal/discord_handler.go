@@ -12,12 +12,18 @@ import (
 	"github.com/yoru0/odibot/pkg"
 )
 
+type Player struct {
+	ID       string
+	Username string
+	Joined   bool
+}
+
 type Lobby struct {
 	GuildID     string
 	ChannelID   string
 	HostID      string
 	NumPlayers  int
-	JoinedUsers map[string]bool
+	JoinedUsers map[string]*Player
 }
 
 var Lobbies = map[string]*Lobby{}
@@ -68,9 +74,7 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	content := strings.ToLower(m.Content)
-
-	if strings.HasPrefix(content, "capsa") {
+	if strings.HasPrefix(m.Content, "capsa") {
 		HandleCapsaCommand(s, m)
 		return
 	}
@@ -78,6 +82,9 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	switch m.Content {
 	case "join":
 		HandleJoinCommand(s, m)
+
+	case "simulate":
+		SimulateLobby(s, m)
 
 	case "dm":
 		dmChannel, err := s.UserChannelCreate(m.Author.ID)
