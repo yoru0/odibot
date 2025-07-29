@@ -13,12 +13,13 @@ func HandleJoinCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	// command if not used
+	// comment if not used
 	if m.Author.ID == ownerID && len(lobby.JoinedUsers) == 1 {
 		lobby.JoinedUsers["dummy1"] = &Player{ID: "dummy1", Username: "Dummy1", Joined: true}
 		lobby.JoinedUsers["dummy2"] = &Player{ID: "dummy2", Username: "Dummy2", Joined: true}
+		lobby.JoinedUsers["dummy3"] = &Player{ID: "dummy3", Username: "Dummy3", Joined: true}
 		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content: "Dev mode: Added 2 dummy players for simulation",
+			Content: "Dev mode: Added 3 dummy players for simulation",
 		})
 	}
 
@@ -52,7 +53,9 @@ func HandleJoinCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println("DM error:", err)
 			continue
 		}
-		s.ChannelMessageSend(dm.ID, fmt.Sprintf("[%s] You have cards: A♠ 2♥ 3♣", player.Username))
+		s.ChannelMessageSendComplex(dm.ID, &discordgo.MessageSend{
+			Content: player.Username,
+		})
 	}
 
 	delete(Lobbies, m.GuildID)
