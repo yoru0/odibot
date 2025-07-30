@@ -11,3 +11,5 @@ type Player struct {
 	Hand       deck.Deck
 	Skip       bool
 }
+
+type Players []Player
