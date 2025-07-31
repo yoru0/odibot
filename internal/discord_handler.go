@@ -83,9 +83,6 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 	case "join":
 		HandleJoinCommand(s, m)
 
-	case "simulate":
-		SimulateLobby(s, m)
-
 	case "dm":
 		dmChannel, err := s.UserChannelCreate(m.Author.ID)
 		if err != nil {

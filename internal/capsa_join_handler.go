@@ -17,7 +17,6 @@ func HandleJoinCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	if m.Author.ID == ownerID && len(lobby.JoinedUsers) == 1 {
 		lobby.JoinedUsers["dummy1"] = &Player{ID: "dummy1", Username: "Dummy1", Joined: true}
 		lobby.JoinedUsers["dummy2"] = &Player{ID: "dummy2", Username: "Dummy2", Joined: true}
-		lobby.JoinedUsers["dummy3"] = &Player{ID: "dummy3", Username: "Dummy3", Joined: true}
 		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Content: "Dev mode: Added 3 dummy players for simulation",
 		})

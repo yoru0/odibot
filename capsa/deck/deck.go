@@ -69,3 +69,14 @@ func (d *Deck) DealDeck(players int) []Deck {
 	*d = (*d)[total:]
 	return hands
 }
+
+
+
+func (d *Deck) RemoveThreeDiamonds() {
+	for i, card := range *d {
+		if  card.Rank == 3 && card.Suit == Diamonds {
+			*d = append((*d)[:i], (*d)[i+1:]...)
+			return
+		}
+	}
+}
