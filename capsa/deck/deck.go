@@ -70,7 +70,16 @@ func (d *Deck) DealDeck(players int) []Deck {
 	return hands
 }
 
-
+func (d *Deck) DealDeckThreePlayer() []Deck {
+	per := 13
+	hands := make([]Deck, 3)
+	for i := range 3 {
+		start := i * per
+		end := start + per
+		hands[i] = (*d)[start:end]
+	}
+	return hands
+}
 
 func (d *Deck) RemoveThreeDiamonds() {
 	for i, card := range *d {
