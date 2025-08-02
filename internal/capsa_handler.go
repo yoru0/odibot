@@ -18,9 +18,9 @@ func HandleCapsaCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 	}
 
 	numPlayers, err := strconv.Atoi(args[1])
-	if err != nil || numPlayers < 2 {
+	if err != nil || numPlayers < 2 || numPlayers > 4 {
 		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content: "Enter a valid number (minimal 3)",
+			Content: "Enter a valid number (2-4)",
 		})
 		return
 	}

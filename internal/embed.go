@@ -39,7 +39,6 @@ func EmbedJoin() *discordgo.MessageEmbed {
 
 		Footer: &discordgo.MessageEmbedFooter{
 			Text:    "Footer text here",
-			IconURL: "https://cdn-icons-png.flaticon.com/512/25/25231.png",
 		},
 
 		Timestamp: time.Now().Format(time.RFC3339),
