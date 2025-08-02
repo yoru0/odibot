@@ -1,4 +1,4 @@
-package internal
+package dc
 
 import (
 	"fmt"
@@ -6,13 +6,21 @@ import (
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/yoru0/odibot/capsa/player"
 )
 
 func HandleCapsaCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
+	// if m.GuildID == "" {
+	// 	s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
+	// 		Content: "Can't start game in a DM",
+	// 	})
+	// 	return
+	// }
+
 	args := strings.Fields(m.Content)
 	if len(args) != 2 {
 		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
-			Content: "Usage: `!capsa <number_of_players>`",
+			Content: "Usage: `capsa <number_of_players>`",
 		})
 		return
 	}
@@ -37,9 +45,9 @@ func HandleCapsaCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		ChannelID:  m.ChannelID,
 		HostID:     m.Author.ID,
 		NumPlayers: numPlayers,
-		JoinedUsers: map[string]*Player{
+		JoinedUsers: map[string]*player.Player{
 			m.Author.ID: {
-				ID:       m.Author.ID,
+				UserID:   m.Author.ID,
 				Username: m.Author.Username,
 				Joined:   true,
 			},
@@ -51,3 +59,4 @@ func HandleCapsaCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		Content: fmt.Sprintf("%s started a Capsa game. Type `join` to participate. Waiting for %d more players.", m.Author.Username, left),
 	})
 }
+
