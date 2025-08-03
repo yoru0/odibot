@@ -56,10 +56,12 @@ func HandleJoinCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		}
 		
 		s.ChannelMessageSendComplex(dm.ID, &discordgo.MessageSend{
-			Content: fmt.Sprintf("On production, %s", player.Username),
-			Embed:   EmbedJoin(),
+			Content: fmt.Sprintf("[Game starting...] On production, %s", player.Username),
 		})
 	}
+
+
+	
 
 	delete(Lobbies, m.GuildID)
 }
