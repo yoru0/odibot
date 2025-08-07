@@ -1,4 +1,4 @@
-package dc
+package internal
 
 import (
 	"fmt"
@@ -6,18 +6,24 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/bwmarrin/discordgo"
-	"github.com/yoru0/odibot/capsa/player"
 	"github.com/yoru0/odibot/pkg"
 )
+
+type Player struct {
+	ID       string
+	Username string
+	Joined   bool
+}
 
 type Lobby struct {
 	GuildID     string
 	ChannelID   string
 	HostID      string
 	NumPlayers  int
-	JoinedUsers map[string]*player.Player
+	JoinedUsers map[string]*Player
 }
 
 var Lobbies = map[string]*Lobby{}
@@ -98,6 +104,11 @@ func messageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
 		})
 
 	case "shutdown":
-		HandleShutdownCommand(m.Author.ID)
+		if m.Author.ID == ownerID {
+			go func() {
+				time.Sleep(1 * time.Second)
+				quit <- struct{}{}
+			}()
+		}
 	}
 }
