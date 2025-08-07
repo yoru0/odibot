@@ -1,9 +1,10 @@
-package internal
+package dc
 
 import (
 	"fmt"
 
 	"github.com/bwmarrin/discordgo"
+	"github.com/yoru0/odibot/capsa/player"
 )
 
 func HandleJoinCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
@@ -15,9 +16,9 @@ func HandleJoinCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 
 	// comment if not used
 	if m.Author.ID == ownerID && len(lobby.JoinedUsers) == 1 {
-		lobby.JoinedUsers["dummy1"] = &Player{ID: "dummy1", Username: "Dummy1", Joined: true}
-		lobby.JoinedUsers["dummy2"] = &Player{ID: "dummy2", Username: "Dummy2", Joined: true}
-		lobby.JoinedUsers["dummy3"] = &Player{ID: "dummy3", Username: "Dummy3", Joined: true}
+		lobby.JoinedUsers["dummy1"] = &player.Player{UserID: "dummy1", Username: "Dummy1", Joined: true}
+		lobby.JoinedUsers["dummy2"] = &player.Player{UserID: "dummy2", Username: "Dummy2", Joined: true}
+		lobby.JoinedUsers["dummy3"] = &player.Player{UserID: "dummy3", Username: "Dummy3", Joined: true}
 		s.ChannelMessageSendComplex(m.ChannelID, &discordgo.MessageSend{
 			Content: "Dev mode: Added 3 dummy players for simulation",
 		})
@@ -29,8 +30,8 @@ func HandleJoinCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 		return
 	}
 
-	lobby.JoinedUsers[m.Author.ID] = &Player{
-		ID:       m.Author.ID,
+	lobby.JoinedUsers[m.Author.ID] = &player.Player{
+		UserID:   m.Author.ID,
 		Username: m.Author.Username,
 		Joined:   true,
 	}
@@ -53,7 +54,7 @@ func HandleJoinCommand(s *discordgo.Session, m *discordgo.MessageCreate) {
 			fmt.Println("DM error:", err)
 			continue
 		}
-
+		
 		s.ChannelMessageSendComplex(dm.ID, &discordgo.MessageSend{
 			Content: fmt.Sprintf("On production, %s", player.Username),
 			Embed:   EmbedJoin(),
