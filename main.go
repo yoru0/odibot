@@ -1,8 +1,8 @@
 package main
 
-import "github.com/yoru0/odibot/dc"
+import "github.com/yoru0/odibot/internal"
 
 func main() {
 
-	dc.StartDiscord()
+	internal.StartDiscord()
 }
