@@ -12,6 +12,14 @@ import (
 	"github.com/yoru0/odibot/pkg"
 )
 
+type Bot struct {
+	Session   *discordgo.Session
+	Lobbies   map[string]*Lobby
+	OwnerID   string
+	ChannelID string
+	Quit      chan struct{}
+}
+
 type Lobby struct {
 	GuildID     string
 	ChannelID   string
