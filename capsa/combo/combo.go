@@ -3,50 +3,24 @@ package combo
 import (
 	"sort"
 
-	"github.com/yoru0/odibot/capsa/deck"
+	"github.com/yoru0/odibot/internal/models"
 )
 
-type ComboType int
-
-const (
-	None ComboType = iota
-	Skip
-	Single
-	Pair
-	Triple
-	Straight
-	Flush
-	FullHouse
-	FourOfAKind
-	StraightFlush
-	InvalidCombo
-)
-
-type Combo struct {
-	Type  ComboType
-	Cards deck.Deck
-	Power deck.Card
-}
-
-func NewCombo(cards deck.Deck) *Combo {
-	return &Combo{}
-}
-
-func IsPair(cards deck.Deck) bool {
+func IsPair(cards models.Deck) bool {
 	if len(cards) != 2 {
 		return false
 	}
 	return cards[0].Rank == cards[1].Rank
 }
 
-func IsTriple(cards deck.Deck) bool {
+func IsTriple(cards models.Deck) bool {
 	if len(cards) != 3 {
 		return false
 	}
 	return cards[0].Rank == cards[1].Rank && cards[1].Rank == cards[2].Rank
 }
 
-func IsStraight(cards deck.Deck) bool {
+func IsStraight(cards models.Deck) bool {
 	if len(cards) != 5 {
 		return false
 	}
@@ -65,7 +39,7 @@ func IsStraight(cards deck.Deck) bool {
 	return true
 }
 
-func IsFlush(cards deck.Deck) bool {
+func IsFlush(cards models.Deck) bool {
 	if len(cards) != 5 {
 		return false
 	}
@@ -78,7 +52,7 @@ func IsFlush(cards deck.Deck) bool {
 	return true
 }
 
-func IsFullHouse(cards deck.Deck) bool {
+func IsFullHouse(cards models.Deck) bool {
 	if len(cards) != 5 {
 		return false
 	}
@@ -98,7 +72,7 @@ func IsFullHouse(cards deck.Deck) bool {
 	return false
 }
 
-func IsFourOfAKind(cards deck.Deck) bool {
+func IsFourOfAKind(cards models.Deck) bool {
 	if len(cards) != 5 {
 		return false
 	}
@@ -115,35 +89,6 @@ func IsFourOfAKind(cards deck.Deck) bool {
 	return false
 }
 
-func IsStraightFlush(cards deck.Deck) bool {
+func IsStraightFlush(cards models.Deck) bool {
 	return IsStraight(cards) && IsFlush(cards)
-}
-
-func (c ComboType) String() string {
-	switch c {
-	case None:
-		return "None"
-	case Skip:
-		return "Skip"
-	case Single:
-		return "Single"
-	case Pair:
-		return "Pair"
-	case Triple:
-		return "Triple"
-	case Straight:
-		return "Straight"
-	case Flush:
-		return "Flush"
-	case FullHouse:
-		return "Full House"
-	case FourOfAKind:
-		return "Four of a Kind"
-	case StraightFlush:
-		return "Straight Flush"
-	case InvalidCombo:
-		return "Invalid Combo"
-	default:
-		return "Unknown"
-	}
 }
