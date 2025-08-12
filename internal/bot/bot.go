@@ -8,12 +8,13 @@ import (
 const prefix = "!odi"
 
 type Bot struct {
-	session *discordgo.Session
-	manager *store.Manager
-	ownerID string
+	session    *discordgo.Session
+	manager    *store.Manager
+	ownerID    string
+	announceCh string
 }
 
-func New(token, ownerID string) (*Bot, error) {
+func New(token, ownerID, annouceCh string) (*Bot, error) {
 	s, err := discordgo.New("Bot " + token)
 	if err != nil {
 		return nil, err
@@ -23,19 +24,25 @@ func New(token, ownerID string) (*Bot, error) {
 		discordgo.IntentsMessageContent
 
 	b := &Bot{
-		session: s,
-		manager: store.NewManager(),
-		ownerID: ownerID,
+		session:    s,
+		manager:    store.NewManager(),
+		ownerID:    ownerID,
+		announceCh: annouceCh,
 	}
 	s.AddHandler(b.onMessageCreate)
 	return b, nil
 }
 
 func (b *Bot) Start() error {
-	return b.session.Open()
+	if err := b.session.Open(); err != nil {
+		return err
+	}
+	b.announce("Odi is running")
+	return nil
 }
 
 func (b *Bot) Stop() error {
+	b.announce("Bye bye")
 	return b.session.Close()
 }
 
@@ -57,11 +64,20 @@ func (b *Bot) dmChannelID(userID string) (string, error) {
 
 func (b *Bot) broadcast(session *store.Session, content string) {
 	seen := map[string]bool{}
-    for _, chID := range session.DMChannel {
-        if seen[chID] { continue }
-        seen[chID] = true
-        b.session.ChannelMessageSend(chID, content)
-    }
+	for _, chID := range session.DMChannel {
+		if seen[chID] {
+			continue
+		}
+		seen[chID] = true
+		b.session.ChannelMessageSend(chID, content)
+	}
+}
+
+func (b *Bot) announce(msg string) {
+	if b.announceCh == "" {
+		return
+	}
+	b.session.ChannelMessageSend(b.announceCh, msg)
 }
 
 func (b *Bot) onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {

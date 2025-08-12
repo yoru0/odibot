@@ -20,10 +20,11 @@ func main() {
 	if token == "" {
 		log.Fatal("DISCORD_TOKEN not set")
 	}
-	
-	ownerID := os.Getenv("DISCORD_USER_ID")
 
-	b, err := bot.New(token, ownerID)
+	ownerID := os.Getenv("DISCORD_USER_ID")
+	annouceCh := os.Getenv("DISCORD_CHANNEL_ID")
+
+	b, err := bot.New(token, ownerID, annouceCh)
 	if err != nil {
 		log.Fatalf("init bot: %v", err)
 	}
