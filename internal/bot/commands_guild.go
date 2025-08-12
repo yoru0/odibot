@@ -47,7 +47,6 @@ func (b *Bot) handleShutdown(m *discordgo.MessageCreate) {
 	if b.ownerID == "" || m.Author.ID != b.ownerID {
 		return
 	}
-	b.session.ChannelMessageSend(m.ChannelID, "Shutting down.")
 	b.Stop()
 	os.Exit(0)
 }
