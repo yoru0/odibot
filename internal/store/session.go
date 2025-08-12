@@ -8,4 +8,5 @@ type Session struct {
 	Game           *game.Game
 	DMChannel      map[string]string // userID -> dmChannelID
 	Started        bool
+	HasDummy       bool
 }

@@ -55,6 +55,31 @@ func (g *Game) AddPlayer(userID, name, tag string) error {
 	return nil
 }
 
+// AddDummy adds a dummy to the game (owner-controlled).
+func (g *Game) AddDummy(userID, name string) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.started {
+		return errors.New("game already started")
+	}
+	if len(g.players) >= 4 {
+		return errors.New("game is full (max 4 players)")
+	}
+	for _, p := range g.players {
+		if p.UserID == userID {
+			return errors.New("user already joined")
+		}
+	}
+	g.players = append(g.players, &Player{
+		Idx:     len(g.players),
+		UserID:  userID,
+		Name:    name,
+		Tag:     "dummy",
+		IsDummy: true,
+	})
+	return nil
+}
+
 // RemovePlayer removes player by userID.
 func (g *Game) RemovePlayer(userID string) {
 	g.mu.Lock()
@@ -79,6 +104,14 @@ func (g *Game) PlayerList() string {
 		names = append(names, player.Name)
 	}
 	return strings.Join(names, ", ")
+}
+
+// CurrentPlayerInfo returns information about current player.
+func (g *Game) CurrentPlayerInfo() (id, name string, isDummy bool) {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	p := g.players[g.turn]
+	return p.UserID, p.Name, p.IsDummy
 }
 
 // PlayersSnapshot returns a copy of the players slice.

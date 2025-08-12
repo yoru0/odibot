@@ -56,9 +56,12 @@ func (b *Bot) dmChannelID(userID string) (string, error) {
 }
 
 func (b *Bot) broadcast(session *store.Session, content string) {
-	for userID := range session.DMChannel {
-		b.session.ChannelMessageSend(session.DMChannel[userID], content)
-	}
+	seen := map[string]bool{}
+    for _, chID := range session.DMChannel {
+        if seen[chID] { continue }
+        seen[chID] = true
+        b.session.ChannelMessageSend(chID, content)
+    }
 }
 
 func (b *Bot) onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
