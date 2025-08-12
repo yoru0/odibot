@@ -53,7 +53,7 @@ func (m *Manager) Has(channelID string) bool {
 }
 
 // MarkStarted marks started Channel and index all players.
-func (m *Manager) MarkStarted(channelID string) {
+func (m *Manager) MarkStarted(channelID, ownerID string) {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	s := m.byChannel[channelID]
@@ -63,6 +63,9 @@ func (m *Manager) MarkStarted(channelID string) {
 	s.Started = true
 	for _, p := range s.Game.PlayersSnapshot() {
 		m.byUser[p.UserID] = s
+	}
+	if s.HasDummy && ownerID != "" {
+		m.byUser[ownerID] = s
 	}
 }
 

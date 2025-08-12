@@ -39,6 +39,8 @@ func comboTypeName(t ComboType) string {
 		return "Single"
 	case ComboPair:
 		return "Pair"
+	case ComboTriple:
+		return "Triple"
 	case ComboStraight:
 		return "Straight"
 	case ComboFlush:
