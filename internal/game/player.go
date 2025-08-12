@@ -10,6 +10,7 @@ type Player struct {
 	Hand     []Card
 	Skiped   bool
 	Finished bool
+	IsDummy  bool
 }
 
 // HasCard returns card index, returns -1 if none is found.

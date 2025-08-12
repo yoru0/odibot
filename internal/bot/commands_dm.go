@@ -33,12 +33,22 @@ func (b *Bot) dmHandleHand(m *discordgo.MessageCreate) {
 		b.dm(m.Author.ID, "You are not in an active game.")
 		return
 	}
-	player := session.Game.FindPlayer(m.Author.ID)
+
+	currID, currName, currIsDummy := session.Game.CurrentPlayerInfo()
+	targetID := m.Author.ID
+	title := "Your hand:\n"
+	if m.Author.ID == b.ownerID && currIsDummy {
+		targetID = currID
+		title = "[" + currName + "] hand:\n"
+	}
+
+	player := session.Game.FindPlayer(targetID)
 	if player == nil {
 		b.dm(m.Author.ID, "You are not in this game")
 		return
 	}
-	b.dm(m.Author.ID, "Your hand:\n"+player.HandString())
+
+	b.dm(m.Author.ID, title+player.HandString())
 }
 
 func (b *Bot) dmHandlePlay(m *discordgo.MessageCreate, tail string) {
@@ -47,12 +57,21 @@ func (b *Bot) dmHandlePlay(m *discordgo.MessageCreate, tail string) {
 		b.dm(m.Author.ID, "You are not in an active game.")
 		return
 	}
+
 	codes := strings.Fields(tail)
-	msg, err := session.Game.Play(m.Author.ID, codes)
+
+	actingID := m.Author.ID
+	currID, _, currIsDummy := session.Game.CurrentPlayerInfo()
+	if m.Author.ID == b.ownerID && currIsDummy {
+		actingID = currID
+	}
+
+	msg, err := session.Game.Play(actingID, codes)
 	if err != nil {
 		b.dm(m.Author.ID, err.Error())
 		return
 	}
+
 	b.broadcast(session, msg)
 	if session.Game.IsOver() {
 		b.broadcast(session, "Game over. Standings:\n"+session.Game.ResultsString())
@@ -66,7 +85,12 @@ func (b *Bot) dmHandleSkip(m *discordgo.MessageCreate) {
 		b.dm(m.Author.ID, "You are not in an active game.")
 		return
 	}
-	msg, err := session.Game.Skip(m.Author.ID)
+	actingID := m.Author.ID
+	currID, _, currIsDummy := session.Game.CurrentPlayerInfo()
+	if m.Author.ID == b.ownerID && currIsDummy {
+		actingID = currID
+	}
+	msg, err := session.Game.Skip(actingID)
 	if err != nil {
 		b.dm(m.Author.ID, err.Error())
 		return
