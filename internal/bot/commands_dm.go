@@ -55,7 +55,7 @@ func (b *Bot) dmHandlePlay(m *discordgo.MessageCreate, tail string) {
 	}
 	b.broadcast(session, msg)
 	if session.Game.IsOver() {
-		b.broadcast(session, "Game over. Winner: "+session.Game.WinnerName())
+		b.broadcast(session, "Game over. Standings:\n"+session.Game.ResultsString())
 		b.manager.Delete(session.LobbyChannelID)
 	}
 }
