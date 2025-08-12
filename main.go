@@ -6,14 +6,21 @@ import (
 	"os/signal"
 	"syscall"
 
+	"github.com/joho/godotenv"
 	"github.com/yoru0/odibot/internal/bot"
 )
 
 func main() {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
 	token := os.Getenv("DISCORD_TOKEN")
 	if token == "" {
 		log.Fatal("DISCORD_TOKEN not set")
 	}
+	
 	ownerID := os.Getenv("DISCORD_USER_ID")
 
 	b, err := bot.New(token, ownerID)
