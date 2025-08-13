@@ -11,18 +11,15 @@ func clone(cards []Card) []Card {
 	return temp
 }
 
-func discardThrees(in []Card) (out []Card, had3S bool) {
+func discardThrees(in []Card) (out []Card) {
 	out = out[:0]
 	for _, c := range in {
 		if c.Rank == R3 {
-			if c.Suit == Spades {
-				had3S = true
-			}
 			continue
 		}
 		out = append(out, c)
 	}
-	return out, had3S
+	return out
 }
 
 func comboString(c Combo) string {
