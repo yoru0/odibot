@@ -115,13 +115,12 @@ func (g *Game) Skip(userID string) (string, error) {
 	if !g.started {
 		return "", errors.New("game not started")
 	}
-	if g.current.Type == ComboNone {
-		return "", errors.New("cannot skip on an empty table")
-	}
-
 	cp := g.currentPlayer()
 	if cp.UserID != userID {
 		return "", errors.New("not your turn")
+	}
+	if g.current.Type == ComboNone {
+		return "", errors.New("cannot skip on an empty table")
 	}
 
 	cp.Skiped = true

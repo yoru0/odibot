@@ -15,6 +15,7 @@ func (b *Bot) routeGuild(m *discordgo.MessageCreate) {
 	}
 	args := strings.Fields(m.Content)
 	if len(args) < 2 {
+		// TODO: change message sent
 		b.session.ChannelMessageSend(m.ChannelID, "valid command pls")
 		return
 	}
@@ -39,7 +40,7 @@ func (b *Bot) routeGuild(m *discordgo.MessageCreate) {
 		b.handleDummy(m, args)
 
 	default:
-		b.session.ChannelMessageSend(m.ChannelID, "Unknown command.")
+		b.session.ChannelMessageSend(m.ChannelID, "Unknown command")
 	}
 }
 
