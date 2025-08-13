@@ -105,8 +105,10 @@ func (b *Bot) handleJoin(m *discordgo.MessageCreate) {
 		b.dm(player.UserID, "["+player.Name+"] Your hand:\n"+player.HandString()+
 			"\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`.")
 	}
-	b.broadcast(session, session.Game.TableStateString())
+
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs. All further actions happen in private messages.")
+	b.broadcast(session, session.Game.FormatThreesReport())
+	b.broadcast(session, session.Game.TableStateString())
 }
 
 func (b *Bot) handleStatus(m *discordgo.MessageCreate) {
@@ -140,7 +142,7 @@ func (b *Bot) handleDummy(m *discordgo.MessageCreate, args []string) {
 		return
 	}
 	if len(args) < 3 {
-		b.session.ChannelMessageSend(m.ChannelID, "Usage: `!odi dummy <2|3>`")
+		b.session.ChannelMessageSend(m.ChannelID, "Usage: `!odi dummy <1-3>`")
 		return
 	}
 	n, err := strconv.Atoi(args[2])
@@ -194,6 +196,7 @@ func (b *Bot) handleDummy(m *discordgo.MessageCreate, args []string) {
 		b.dm(player.UserID, "["+player.Name+"] Your hand:\n"+player.HandString()+
 			"\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`.")
 	}
-	b.broadcast(session, session.Game.TableStateString())
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs with dummies.")
+	b.broadcast(session, session.Game.FormatThreesReport())
+	b.broadcast(session, session.Game.TableStateString())
 }

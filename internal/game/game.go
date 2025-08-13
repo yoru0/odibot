@@ -194,6 +194,50 @@ func (g *Game) WinnerName() string {
 	return ""
 }
 
+func (g *Game) FormatThreesReport() string {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+
+	spadeIdx := -1
+	for i, p := range g.players {
+		if p.HasCard(Card{Rank: R3, Suit: Spades}) >= 0 {
+			spadeIdx = i
+			break
+		}
+	}
+	var b strings.Builder
+	b.WriteString("```")
+	for i, p := range g.players {
+		prefix := "   "
+		if i == spadeIdx {
+			prefix = "-> "
+		}
+
+		parts := make([]string, 0, 4)
+		if p.HasCard(Card{Rank: R3, Suit: Diamonds}) >= 0 {
+			parts = append(parts, "3D")
+		}
+		if p.HasCard(Card{Rank: R3, Suit: Clubs}) >= 0 {
+			parts = append(parts, "3C")
+		}
+		if p.HasCard(Card{Rank: R3, Suit: Hearts}) >= 0 {
+			parts = append(parts, "3H")
+		}
+		if p.HasCard(Card{Rank: R3, Suit: Spades}) >= 0 {
+			parts = append(parts, "3S")
+		}
+		if len(parts) != 0 {
+			b.WriteString(fmt.Sprintf("%s%s - %s\n", prefix, p.Name, strings.Join(parts, " ")))
+		}
+		p.Hand = discardThrees(p.Hand)
+	}
+	if spadeIdx >= 0 {
+		b.WriteString(fmt.Sprintf("\n%s plays first", g.players[spadeIdx].Name))
+	}
+	b.WriteString("```")
+	return b.String()
+}
+
 func (g *Game) advanceTurn() {
 	for {
 		g.turn = (g.turn + 1) % len(g.players)
