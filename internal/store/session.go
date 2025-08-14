@@ -9,4 +9,6 @@ type Session struct {
 	DMChannel      map[string]string // userID -> dmChannelID
 	Started        bool
 	HasDummy       bool
+
+	Selected map[string][]string
 }
