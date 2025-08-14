@@ -27,6 +27,7 @@ func (m *Manager) NewSession(channelID string, desired int) {
 		Desired:        desired,
 		Game:           game.New(channelID),
 		DMChannel:      make(map[string]string),
+		Selected:       make(map[string][]string),
 	}
 }
 
