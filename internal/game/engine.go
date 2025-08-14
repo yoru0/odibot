@@ -27,27 +27,22 @@ func (g *Game) Start() error {
 	g.handSize = len(hands[0])
 
 	start := 0
-	threeS := Card{Rank: R3, Suit: Spades}
-	for i, p := range g.players {
-		if p.HasCard(threeS) >= 0 {
-			start = i
+	foundStarter := false
+
+	threeSuits := []Suit{Spades, Hearts, Clubs, Diamonds}
+	for _, suit := range threeSuits {
+		threeCard := Card{Rank: R3, Suit: suit}
+		for i, p := range g.players {
+			if p.HasCard(threeCard) >= 0 {
+				start = i
+				foundStarter = true
+				break
+			}
+		}
+		if foundStarter {
 			break
 		}
 	}
-
-	// found3S := false
-	// for i, p := range g.players {
-	// 	had3S := false
-	// 	p.Hand, had3S = discardThrees(p.Hand)
-	// 	if had3S {
-	// 		start = i
-	// 		found3S = true
-	// 	}
-	// 	SortCardsAsc(p.Hand)
-	// }
-	// if !found3S {
-	// 	start = 0
-	// }
 
 	g.turn = start
 	g.lead = start

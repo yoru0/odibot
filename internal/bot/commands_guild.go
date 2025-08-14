@@ -142,12 +142,12 @@ func (b *Bot) handleDummy(m *discordgo.MessageCreate, args []string) {
 		return
 	}
 	if len(args) < 3 {
-		b.session.ChannelMessageSend(m.ChannelID, "Usage: `!odi dummy <1-3>`")
+		b.session.ChannelMessageSend(m.ChannelID, "Usage: `!odi dummy <1-4>`")
 		return
 	}
 	n, err := strconv.Atoi(args[2])
-	if err != nil || n < 1 || n > 3 {
-		b.session.ChannelMessageSend(m.ChannelID, "Number must be 2-3.")
+	if err != nil || n < 1 || n > 4 {
+		b.session.ChannelMessageSend(m.ChannelID, "Number must be 1-4.")
 		return
 	}
 	session := b.manager.Get(m.ChannelID)
