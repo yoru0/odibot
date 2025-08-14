@@ -30,6 +30,7 @@ func New(token, ownerID, annouceCh string) (*Bot, error) {
 		announceCh: annouceCh,
 	}
 	s.AddHandler(b.onMessageCreate)
+	s.AddHandler(b.onInteractionCreate)
 	return b, nil
 }
 

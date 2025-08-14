@@ -107,8 +107,10 @@ func (b *Bot) handleJoin(m *discordgo.MessageCreate) {
 	}
 
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs. All further actions happen in private messages.")
+	b.broadcast(session, b.buildAllHandsReport(session))
 	b.broadcast(session, session.Game.FormatThreesReport())
 	b.broadcast(session, session.Game.TableStateString())
+	b.sendTurnUI(session)
 }
 
 func (b *Bot) handleStatus(m *discordgo.MessageCreate) {
@@ -197,6 +199,8 @@ func (b *Bot) handleDummy(m *discordgo.MessageCreate, args []string) {
 			"\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`.")
 	}
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs with dummies.")
+	b.broadcast(session, b.buildAllHandsReport(session))
 	b.broadcast(session, session.Game.FormatThreesReport())
 	b.broadcast(session, session.Game.TableStateString())
+	b.sendTurnUI(session)
 }

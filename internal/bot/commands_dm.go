@@ -1,6 +1,7 @@
 package bot
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/bwmarrin/discordgo"
@@ -73,6 +74,7 @@ func (b *Bot) dmHandlePlay(m *discordgo.MessageCreate, tail string) {
 	}
 
 	b.broadcast(session, msg)
+	b.sendTurnUI(session)
 	if session.Game.IsOver() {
 		b.broadcast(session, "Game over. Standings:\n"+session.Game.ResultsString())
 		b.manager.Delete(session.LobbyChannelID)
@@ -96,6 +98,7 @@ func (b *Bot) dmHandleSkip(m *discordgo.MessageCreate) {
 		return
 	}
 	b.broadcast(session, msg)
+	b.sendTurnUI(session)
 }
 
 func (b *Bot) dmHandleTable(m *discordgo.MessageCreate) {

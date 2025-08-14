@@ -31,6 +31,8 @@ func New(channelID string) *Game {
 	}
 }
 
+//* Player
+
 // AddPlayer adds a player to the game.
 func (g *Game) AddPlayer(userID, name, tag string) error {
 	g.mu.Lock()
@@ -51,31 +53,6 @@ func (g *Game) AddPlayer(userID, name, tag string) error {
 		UserID: userID,
 		Name:   name,
 		Tag:    tag,
-	})
-	return nil
-}
-
-// AddDummy adds a dummy to the game (owner-controlled).
-func (g *Game) AddDummy(userID, name string) error {
-	g.mu.Lock()
-	defer g.mu.Unlock()
-	if g.started {
-		return errors.New("game already started")
-	}
-	if len(g.players) >= 4 {
-		return errors.New("game is full (max 4 players)")
-	}
-	for _, p := range g.players {
-		if p.UserID == userID {
-			return errors.New("user already joined")
-		}
-	}
-	g.players = append(g.players, &Player{
-		Idx:     len(g.players),
-		UserID:  userID,
-		Name:    name,
-		Tag:     "dummy",
-		IsDummy: true,
 	})
 	return nil
 }
@@ -141,6 +118,35 @@ func (g *Game) FindPlayer(userID string) *Player {
 	}
 	return nil
 }
+
+//* Dummy
+
+// AddDummy adds a dummy to the game (owner-controlled).
+func (g *Game) AddDummy(userID, name string) error {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	if g.started {
+		return errors.New("game already started")
+	}
+	if len(g.players) >= 4 {
+		return errors.New("game is full (max 4 players)")
+	}
+	for _, p := range g.players {
+		if p.UserID == userID {
+			return errors.New("user already joined")
+		}
+	}
+	g.players = append(g.players, &Player{
+		Idx:     len(g.players),
+		UserID:  userID,
+		Name:    name,
+		Tag:     "dummy",
+		IsDummy: true,
+	})
+	return nil
+}
+
+//* Table
 
 // TableStateString returns the current table state.
 func (g *Game) TableStateString() string {
@@ -243,6 +249,20 @@ searchLoop:
 	}
 	b.WriteString("```")
 	return b.String()
+}
+
+// HandSnapshot returns list of card by userID.
+func (g *Game) HandSnapshot(userID string) []Card {
+	g.mu.Lock()
+	defer g.mu.Unlock()
+	for _, p := range g.players {
+		if p.UserID == userID {
+			out := make([]Card, len(p.Hand))
+			copy(out, p.Hand)
+			return out
+		}
+	}
+	return nil
 }
 
 func (g *Game) advanceTurn() {
