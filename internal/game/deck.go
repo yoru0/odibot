@@ -32,11 +32,12 @@ func (d Deck) Shuffle() {
 // Deal returns a slice of card for each players.
 func (d Deck) Deal(players int) [][]Card {
 	hands := make([][]Card, players)
+	cardsPerPlayer := 13
 	for i := range hands {
-		hands[i] = make([]Card, 0, len(d)/players)
+		hands[i] = make([]Card, 0, cardsPerPlayer)
 	}
-	for i, c := range d {
-		hands[i%players] = append(hands[i%players], c)
+	for i := 0; i < cardsPerPlayer*players; i++ {
+		hands[i%players] = append(hands[i%players], d[i])
 	}
 	for i := range hands {
 		SortCardsAsc(hands[i])

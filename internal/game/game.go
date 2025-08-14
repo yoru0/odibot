@@ -194,25 +194,32 @@ func (g *Game) WinnerName() string {
 	return ""
 }
 
+// FormatThreesReport returns a string containing players with 3s.
 func (g *Game) FormatThreesReport() string {
 	g.mu.Lock()
 	defer g.mu.Unlock()
 
-	spadeIdx := -1
-	for i, p := range g.players {
-		if p.HasCard(Card{Rank: R3, Suit: Spades}) >= 0 {
-			spadeIdx = i
-			break
+	startIdx := -1
+	threeSuits := []Suit{Spades, Hearts, Clubs, Diamonds}
+
+searchLoop:
+	for _, suit := range threeSuits {
+		threeCard := Card{Rank: R3, Suit: suit}
+		for i, p := range g.players {
+			if p.HasCard(threeCard) >= 0 {
+				startIdx = i
+				break searchLoop
+			}
 		}
 	}
+
 	var b strings.Builder
 	b.WriteString("```")
 	for i, p := range g.players {
 		prefix := "   "
-		if i == spadeIdx {
+		if i == startIdx {
 			prefix = "-> "
 		}
-
 		parts := make([]string, 0, 4)
 		if p.HasCard(Card{Rank: R3, Suit: Diamonds}) >= 0 {
 			parts = append(parts, "3D")
@@ -231,8 +238,8 @@ func (g *Game) FormatThreesReport() string {
 		}
 		p.Hand = discardThrees(p.Hand)
 	}
-	if spadeIdx >= 0 {
-		b.WriteString(fmt.Sprintf("\n%s plays first", g.players[spadeIdx].Name))
+	if startIdx >= 0 {
+		b.WriteString(fmt.Sprintf("\n%s plays first", g.players[startIdx].Name))
 	}
 	b.WriteString("```")
 	return b.String()
