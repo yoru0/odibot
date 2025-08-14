@@ -27,12 +27,28 @@ func (b *Bot) sendTurnUI(sess *store.Session) {
 		return
 	}
 
-	content := fmt.Sprintf("%s's turn. Select up to 5 cards, then press **Play**. Or press **Skip**.", actingName)
-
+	// content := fmt.Sprintf("%s's turn. Select up to 5 cards, then press **Play**. Or press **Skip**.", actingName)
 	comps := b.buildCardPickerComponents(sess, actingID, actingName)
 
+	hand := sess.Game.HandSnapshot(actingID)
+	handLine := joinPrettyCards(hand)
+	handCount := len(hand)
+
+	selected := sess.Selected[actingID]
+	selectedLine := ""
+	if len(selected) > 0 {
+		selectedLine = "\n**Selected:** " + prettyFromCodes(selected)
+	}
+
+	title := "Your turn"
+	if isDummy && b.ownerID != "" {
+		title = actingName + " (dummy) - your turn"
+	}
+	desc := "Select up to 5 cards, then press **Play**. Or press **Pass**." +
+		fmt.Sprintf("\n\n**Hand (%d):** %s", handCount, handLine) + selectedLine
+
 	b.session.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
-		Content:    content,
+		Embeds: []*discordgo.MessageEmbed{newEmbed(title, desc, colorInfo)},
 		Components: comps,
 	})
 }
@@ -90,6 +106,18 @@ func joinPrettyCards(cards []game.Card) string {
 	out := make([]string, 0, len(cards))
 	for _, c := range cards {
 		out = append(out, prettyLabel(c))
+	}
+	return strings.Join(out, " ")
+}
+
+func prettyFromCodes(codes []string) string {
+	out := make([]string, 0, len(codes))
+	for _, v := range codes {
+		if c, ok := game.ParseCard(v); ok {
+			out = append(out, prettyLabel(c))
+		} else {
+			out = append(out, v)
+		}
 	}
 	return strings.Join(out, " ")
 }
