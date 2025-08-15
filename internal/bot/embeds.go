@@ -45,4 +45,3 @@ func (b *Bot) broadcastEmbed(sess *store.Session, title, desc string, color int)
 		b.sendEmbed(chID, title, desc, color)
 	}
 }
-
