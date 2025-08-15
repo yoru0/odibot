@@ -18,17 +18,13 @@ const (
 
 func (b *Bot) sendTurnUI(sess *store.Session) {
 	actingID, actingName, isDummy := sess.Game.CurrentPlayerInfo()
-	chID := sess.DMChannel[actingID]
-	if isDummy && b.ownerID != "" {
-		chID = sess.DMChannel[actingID]
-	}
 
+	chID := sess.DMChannel[actingID]
 	if chID == "" {
 		return
 	}
 
-	// content := fmt.Sprintf("%s's turn. Select up to 5 cards, then press **Play**. Or press **Skip**.", actingName)
-	comps := b.buildCardPickerComponents(sess, actingID, actingName)
+	comps := b.buildCardPickerComponents(sess, actingID)
 
 	hand := sess.Game.HandSnapshot(actingID)
 	handLine := joinPrettyCards(hand)
@@ -48,15 +44,15 @@ func (b *Bot) sendTurnUI(sess *store.Session) {
 		fmt.Sprintf("\n\n**Hand (%d):** %s", handCount, handLine) + selectedLine
 
 	b.session.ChannelMessageSendComplex(chID, &discordgo.MessageSend{
-		Embeds: []*discordgo.MessageEmbed{newEmbed(title, desc, colorInfo)},
+		Embeds:     []*discordgo.MessageEmbed{newEmbed(title, desc, colorInfo)},
 		Components: comps,
 	})
 }
 
-func (b *Bot) buildCardPickerComponents(sess *store.Session, actingUserID, actingName string) []discordgo.MessageComponent {
+func (b *Bot) buildCardPickerComponents(sess *store.Session, actingUserID string) []discordgo.MessageComponent {
 	hand := sess.Game.HandSnapshot(actingUserID)
 
-	selected := make(map[string]bool, len(sess.Selected[actingUserID]))
+	selected := map[string]bool{}
 	for _, v := range sess.Selected[actingUserID] {
 		selected[strings.ToUpper(strings.TrimSpace(v))] = true
 	}
@@ -86,17 +82,17 @@ func (b *Bot) buildCardPickerComponents(sess *store.Session, actingUserID, actin
 		discordgo.Button{
 			Style:    discordgo.PrimaryButton,
 			Label:    "Play Selected",
-			CustomID: fmt.Sprintf("%s:%s:%s", customPlay, sess.LobbyChannelID, actingUserID),
+			CustomID: encodeCustomID(customPlay, sess.LobbyChannelID, actingUserID),
 		},
 		discordgo.Button{
 			Style:    discordgo.SecondaryButton,
 			Label:    "Skip",
-			CustomID: fmt.Sprintf("%s:%s:%s", customSkip, sess.LobbyChannelID, actingUserID),
+			CustomID: encodeCustomID(customSkip, sess.LobbyChannelID, actingUserID),
 		},
 		discordgo.Button{
 			Style:    discordgo.SecondaryButton,
 			Label:    "Clear",
-			CustomID: fmt.Sprintf("%s:%s:%s", customClear, sess.LobbyChannelID, actingUserID),
+			CustomID: encodeCustomID(customClear, sess.LobbyChannelID, actingUserID),
 		},
 	}}
 	return []discordgo.MessageComponent{row1, row2}
@@ -122,25 +118,25 @@ func prettyFromCodes(codes []string) string {
 	return strings.Join(out, " ")
 }
 
-func (b *Bot) buildAllHandsReport(sess *store.Session) string {
-	players := sess.Game.PlayersSnapshot()
-	if len(players) == 0 {
-		return ""
-	}
+// func (b *Bot) buildAllHandsReport(sess *store.Session) string {
+// 	players := sess.Game.PlayersSnapshot()
+// 	if len(players) == 0 {
+// 		return ""
+// 	}
 
-	maxName := 0
-	for _, p := range players {
-		if l := len(p.Name); l > maxName {
-			maxName = l
-		}
-	}
+// 	maxName := 0
+// 	for _, p := range players {
+// 		if l := len(p.Name); l > maxName {
+// 			maxName = l
+// 		}
+// 	}
 
-	var sb strings.Builder
-	sb.WriteString("All hands:\n")
-	sb.WriteString("```\n")
-	for _, p := range players {
-		sb.WriteString(fmt.Sprintf("%-*s - %s\n", maxName, p.Name, joinPrettyCards(p.Hand)))
-	}
-	sb.WriteString("```")
-	return sb.String()
-}
+// 	var sb strings.Builder
+// 	sb.WriteString("All hands:\n")
+// 	sb.WriteString("```\n")
+// 	for _, p := range players {
+// 		sb.WriteString(fmt.Sprintf("%-*s - %s\n", maxName, p.Name, joinPrettyCards(p.Hand)))
+// 	}
+// 	sb.WriteString("```")
+// 	return sb.String()
+// }
