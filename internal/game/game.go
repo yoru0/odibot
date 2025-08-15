@@ -220,7 +220,6 @@ searchLoop:
 	}
 
 	var b strings.Builder
-	b.WriteString("```")
 	for i, p := range g.players {
 		prefix := "   "
 		if i == startIdx {
@@ -247,7 +246,6 @@ searchLoop:
 	if startIdx >= 0 {
 		b.WriteString(fmt.Sprintf("\n%s plays first", g.players[startIdx].Name))
 	}
-	b.WriteString("```")
 	return b.String()
 }
 
