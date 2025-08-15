@@ -107,9 +107,11 @@ func (b *Bot) handleJoin(m *discordgo.MessageCreate) {
 	}
 
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs. All further actions happen in private messages.")
-	b.broadcast(session, b.buildAllHandsReport(session))
-	b.broadcast(session, session.Game.FormatThreesReport())
-	b.broadcast(session, session.Game.TableStateString())
+	b.broadcastEmbed(session, "Threes", "```\n"+session.Game.FormatThreesReport()+"\n```", colorInfo)
+	b.broadcastEmbed(session, "Table", session.Game.TableStateString(), colorInfo)
+	// b.broadcast(session, b.buildAllHandsReport(session))
+	// b.broadcast(session, session.Game.FormatThreesReport())
+	// b.broadcast(session, session.Game.TableStateString())
 	b.sendTurnUI(session)
 }
 
@@ -199,8 +201,10 @@ func (b *Bot) handleDummy(m *discordgo.MessageCreate, args []string) {
 			"\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`.")
 	}
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs with dummies.")
-	b.broadcast(session, b.buildAllHandsReport(session))
-	b.broadcast(session, session.Game.FormatThreesReport())
-	b.broadcast(session, session.Game.TableStateString())
+	b.broadcastEmbed(session, "Threes", "```\n"+session.Game.FormatThreesReport()+"\n```", colorInfo)
+	b.broadcastEmbed(session, "Table", session.Game.TableStateString(), colorInfo)
+	// b.broadcast(session, b.buildAllHandsReport(session))
+	// b.broadcast(session, session.Game.FormatThreesReport())
+	// b.broadcast(session, session.Game.TableStateString())
 	b.sendTurnUI(session)
 }
