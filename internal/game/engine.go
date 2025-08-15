@@ -21,14 +21,13 @@ func (g *Game) Start() error {
 	hands := d.Deal(len(g.players))
 	for i, player := range g.players {
 		player.Hand = hands[i]
-		player.Skiped = false
+		player.Skipped = false
 		player.Finished = false
 	}
 	g.handSize = len(hands[0])
 
 	start := 0
 	foundStarter := false
-
 	threeSuits := []Suit{Spades, Hearts, Clubs, Diamonds}
 	for _, suit := range threeSuits {
 		threeCard := Card{Rank: R3, Suit: suit}
@@ -49,7 +48,6 @@ func (g *Game) Start() error {
 	g.current = Combo{Type: ComboNone}
 	g.skipsInRow = 0
 	g.started = true
-
 	return nil
 }
 
@@ -61,12 +59,16 @@ func (g *Game) Play(userID string, codes []string) (string, error) {
 		return "", errors.New("game not started")
 	}
 
-	cp := g.currentPlayer()
+	cp := g.players[g.turn]
 	if cp.UserID != userID {
 		return "", errors.New("not your turn")
 	}
 	if len(codes) == 0 {
 		return "", errors.New("provide cards to play, e.g.`play 2H 2S`")
+	}
+
+	if g.current.Type != ComboNone && cp.Skipped {
+		return "", errors.New("you already skipped this round; wait until the table resets")
 	}
 
 	selected := make([]Card, 0, len(codes))
@@ -89,15 +91,19 @@ func (g *Game) Play(userID string, codes []string) (string, error) {
 		return "", errors.New("your combo does not beat the table")
 	}
 
+	if g.current.Type == ComboNone {
+		g.resetAllSkips()
+	}
+
 	cp.RemoveCards(combo.Cards)
 	g.current = combo
 	g.lead = g.turn
 	g.skipsInRow = 0
+	cp.Skipped = false
 
 	if len(cp.Hand) == 0 {
 		cp.Finished = true
 		g.finishedOrder = append(g.finishedOrder, cp.Idx)
-
 		if g.activePlayers() == 1 {
 			g.gameOver = true
 			if len(g.finishedOrder) > 0 {
@@ -108,7 +114,7 @@ func (g *Game) Play(userID string, codes []string) (string, error) {
 	}
 
 	g.advanceTurn()
-	return fmt.Sprintf("%s plays %s. Next: %s", cp.Name, comboString(combo), g.currentPlayer().Name), nil
+	return fmt.Sprintf("%s plays %s. Next: %s", cp.Name, comboString(combo), g.players[g.turn].Name), nil
 }
 
 // Skip handles a player skipping their turn.
@@ -118,7 +124,7 @@ func (g *Game) Skip(userID string) (string, error) {
 	if !g.started {
 		return "", errors.New("game not started")
 	}
-	cp := g.currentPlayer()
+	cp := g.players[g.turn]
 	if cp.UserID != userID {
 		return "", errors.New("not your turn")
 	}
@@ -126,16 +132,18 @@ func (g *Game) Skip(userID string) (string, error) {
 		return "", errors.New("cannot skip on an empty table")
 	}
 
-	cp.Skiped = true
+	cp.Skipped = true
 	g.skipsInRow++
 	g.advanceTurn()
 
 	if g.skipsInRow >= g.activePlayers()-1 {
 		g.current = Combo{Type: ComboNone}
 		g.skipsInRow = 0
+		g.resetAllSkips()
 		g.turn = g.lead
 		g.advanceTurn()
-		return fmt.Sprintf("%s skips. Table cleared. %s to lead.", cp.Name, g.currentPlayer().Name), nil
+		leader := g.players[g.turn].Name
+		return fmt.Sprintf("%s skips. Table cleared. %s to lead.", cp.Name, leader), nil
 	}
-	return fmt.Sprintf("%s skips. Next: %s", cp.Name, g.currentPlayer().Name), nil
+	return fmt.Sprintf("%s skips. Next: %s", cp.Name, g.players[g.turn].Name), nil
 }
