@@ -31,7 +31,7 @@ func New(channelID string) *Game {
 	}
 }
 
-//* Player
+// Player management ---
 
 // AddPlayer adds a player to the game.
 func (g *Game) AddPlayer(userID, name, tag string) error {
@@ -119,7 +119,7 @@ func (g *Game) FindPlayer(userID string) *Player {
 	return nil
 }
 
-//* Dummy
+// Dummy ---
 
 // AddDummy adds a dummy to the game (owner-controlled).
 func (g *Game) AddDummy(userID, name string) error {
@@ -146,7 +146,7 @@ func (g *Game) AddDummy(userID, name string) error {
 	return nil
 }
 
-//* Table
+// Table & reporting ---
 
 // TableStateString returns the current table state.
 func (g *Game) TableStateString() string {
@@ -154,9 +154,9 @@ func (g *Game) TableStateString() string {
 		return "Game not started."
 	}
 	if g.current.Type == ComboNone {
-		return fmt.Sprintf("Table is empty. %s to lead.", g.currentPlayer().Name)
+		return fmt.Sprintf("Table is empty. %s to lead.", g.players[g.turn].Name)
 	}
-	return fmt.Sprintf("On table: %s. %s to act.", comboString(g.current), g.currentPlayer().Name)
+	return fmt.Sprintf("On table: %s. %s to act.", comboString(g.current), g.players[g.turn].Name)
 }
 
 // IsOver returns whether the game is over.
@@ -263,6 +263,8 @@ func (g *Game) HandSnapshot(userID string) []Card {
 	return nil
 }
 
+// Internals ---
+
 func (g *Game) advanceTurn() {
 	for {
 		g.turn = (g.turn + 1) % len(g.players)
@@ -282,6 +284,8 @@ func (g *Game) activePlayers() int {
 	return n
 }
 
-func (g *Game) currentPlayer() *Player {
-	return g.players[g.turn]
+func (g *Game) resetAllSkips() {
+	for _, p := range g.players {
+		p.Skipped = false
+	}
 }

@@ -29,8 +29,8 @@ func New(token, ownerID, annouceCh string) (*Bot, error) {
 		ownerID:    ownerID,
 		announceCh: annouceCh,
 	}
-	s.AddHandler(b.onMessageCreate)
 	s.AddHandler(b.onInteractionCreate)
+	s.AddHandler(b.onMessageCreate)
 	return b, nil
 }
 
@@ -46,6 +46,19 @@ func (b *Bot) Stop() error {
 	b.announce("Bye bye")
 	return b.session.Close()
 }
+
+func (b *Bot) onMessageCreate(_ *discordgo.Session, m *discordgo.MessageCreate) {
+	if m.Author.Bot {
+		return
+	}
+	if m.GuildID != "" {
+		b.routeGuild(m)
+		return
+	}
+	b.routeDM(m)
+}
+
+// helpers ---
 
 func (b *Bot) dm(userID, content string) {
 	ch, err := b.session.UserChannelCreate(userID)
@@ -79,15 +92,4 @@ func (b *Bot) announce(msg string) {
 		return
 	}
 	b.session.ChannelMessageSend(b.announceCh, msg)
-}
-
-func (b *Bot) onMessageCreate(s *discordgo.Session, m *discordgo.MessageCreate) {
-	if m.Author.Bot {
-		return
-	}
-	if m.GuildID != "" {
-		b.routeGuild(m)
-		return
-	}
-	b.routeDM(m)
 }

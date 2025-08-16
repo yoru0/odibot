@@ -16,13 +16,12 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 
+	annouceCh := os.Getenv("DISCORD_CHANNEL_ID")
+	ownerID := os.Getenv("DISCORD_USER_ID")
 	token := os.Getenv("DISCORD_TOKEN")
 	if token == "" {
 		log.Fatal("DISCORD_TOKEN not set")
 	}
-
-	ownerID := os.Getenv("DISCORD_USER_ID")
-	annouceCh := os.Getenv("DISCORD_CHANNEL_ID")
 
 	b, err := bot.New(token, ownerID, annouceCh)
 	if err != nil {

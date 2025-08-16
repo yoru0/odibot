@@ -2,6 +2,7 @@ package bot
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"strconv"
 	"strings"
@@ -15,8 +16,7 @@ func (b *Bot) routeGuild(m *discordgo.MessageCreate) {
 	}
 	args := strings.Fields(m.Content)
 	if len(args) < 2 {
-		// TODO: change message sent
-		b.session.ChannelMessageSend(m.ChannelID, "valid command pls")
+		b.session.ChannelMessageSend(m.ChannelID, "Usage: `!odi <capsa|join|status|leave|dummy|shutdown>`")
 		return
 	}
 
@@ -49,6 +49,7 @@ func (b *Bot) handleShutdown(m *discordgo.MessageCreate) {
 		return
 	}
 	b.Stop()
+	log.Println("Stopped")
 	os.Exit(0)
 }
 
@@ -72,8 +73,8 @@ func (b *Bot) handleCapsa(m *discordgo.MessageCreate, args []string) {
 }
 
 func (b *Bot) handleJoin(m *discordgo.MessageCreate) {
-	session := b.manager.Get(m.ChannelID)
-	if session == nil {
+	sess := b.manager.Get(m.ChannelID)
+	if sess == nil {
 		b.session.ChannelMessageSend(m.ChannelID, "No lobby here. Create one with `!odi capsa <numPlayers>`.")
 		return
 	}
@@ -81,61 +82,59 @@ func (b *Bot) handleJoin(m *discordgo.MessageCreate) {
 	if m.Member != nil && m.Member.Nick != "" {
 		name = m.Member.Nick
 	}
-	if err := session.Game.AddPlayer(m.Author.ID, name, m.Author.Username); err != nil {
+	if err := sess.Game.AddPlayer(m.Author.ID, name, m.Author.Username); err != nil {
 		b.session.ChannelMessageSend(m.ChannelID, err.Error())
 		return
 	}
-	dmID, err := b.dmChannelID(m.Author.ID)
-	if err == nil {
-		session.DMChannel[m.Author.ID] = dmID
+	if dmID, err := b.dmChannelID(m.Author.ID); err == nil {
+		sess.SetDMChannel(m.Author.ID, dmID)
 	}
-	left := session.Desired - session.Game.NumPlayers()
+
+	left := sess.Desired - sess.Game.NumPlayers()
 	if left > 0 {
 		b.session.ChannelMessageSend(m.ChannelID, fmt.Sprintf("%s joined. Waiting for %d more.", name, left))
 		return
 	}
 
 	// Start game.
-	if err := session.Game.Start(); err != nil {
+	if err := sess.Game.Start(); err != nil {
 		b.session.ChannelMessageSend(m.ChannelID, err.Error())
 		return
 	}
 	b.manager.MarkStarted(m.ChannelID, b.ownerID)
-	for _, player := range session.Game.PlayersSnapshot() {
+
+	for _, player := range sess.Game.PlayersSnapshot() {
 		b.dm(player.UserID, "["+player.Name+"] Your hand:\n"+player.HandString()+
 			"\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`.")
 	}
 
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs. All further actions happen in private messages.")
-	b.broadcastEmbed(session, "Threes", "```\n"+session.Game.FormatThreesReport()+"\n```", colorInfo)
-	b.broadcastEmbed(session, "Table", session.Game.TableStateString(), colorInfo)
-	// b.broadcast(session, b.buildAllHandsReport(session))
-	// b.broadcast(session, session.Game.FormatThreesReport())
-	// b.broadcast(session, session.Game.TableStateString())
-	b.sendTurnUI(session)
+	b.broadcastEmbed(sess, "Threes", "```\n"+sess.Game.FormatThreesReport()+"\n```", colorInfo)
+	b.broadcastEmbed(sess, "Table", sess.Game.TableStateString(), colorInfo)
+	b.sendTurnUI(sess)
 }
 
 func (b *Bot) handleStatus(m *discordgo.MessageCreate) {
-	session := b.manager.Get(m.ChannelID)
-	if session == nil {
+	sess := b.manager.Get(m.ChannelID)
+	if sess == nil {
 		b.session.ChannelMessageSend(m.ChannelID, "No lobby here")
 		return
 	}
 	b.session.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Players: %s (%d/%d).",
-		session.Game.PlayerList(), session.Game.NumPlayers(), session.Desired))
+		sess.Game.PlayerList(), sess.Game.NumPlayers(), sess.Desired))
 }
 
 func (b *Bot) handleLeave(m *discordgo.MessageCreate) {
-	session := b.manager.Get(m.ChannelID)
-	if session == nil {
+	sess := b.manager.Get(m.ChannelID)
+	if sess == nil {
 		b.session.ChannelMessageSend(m.ChannelID, "No lobby here")
 		return
 	}
-	session.Game.RemovePlayer(m.Author.ID)
+	sess.Game.RemovePlayer(m.Author.ID)
 	b.session.ChannelMessageSend(m.ChannelID, fmt.Sprintf("Left. Players: %s (%d/%d).",
-		session.Game.PlayerList(), session.Game.NumPlayers(), session.Desired))
+		sess.Game.PlayerList(), sess.Game.NumPlayers(), sess.Desired))
 
-	if session.Game.NumPlayers() == 0 {
+	if sess.Game.NumPlayers() == 0 {
 		b.manager.Delete(m.ChannelID)
 		b.session.ChannelMessageSend(m.ChannelID, "Lobby removed.")
 	}
@@ -154,8 +153,8 @@ func (b *Bot) handleDummy(m *discordgo.MessageCreate, args []string) {
 		b.session.ChannelMessageSend(m.ChannelID, "Number must be 1-4.")
 		return
 	}
-	session := b.manager.Get(m.ChannelID)
-	if session == nil {
+	sess := b.manager.Get(m.ChannelID)
+	if sess == nil {
 		b.session.ChannelMessageSend(m.ChannelID, "No lobby here. Create one with `!odi capsa <3|4>`.")
 		return
 	}
@@ -167,21 +166,21 @@ func (b *Bot) handleDummy(m *discordgo.MessageCreate, args []string) {
 
 	added := 0
 	for i := 0; i < n; i++ {
-		if session.Game.NumPlayers() >= session.Desired {
+		if sess.Game.NumPlayers() >= sess.Desired {
 			break
 		}
-		dummyID := fmt.Sprintf("dummy:%s:%d", m.ChannelID, session.Game.NumPlayers())
+		dummyID := fmt.Sprintf("dummy:%s:%d", m.ChannelID, sess.Game.NumPlayers())
 		dummyName := fmt.Sprintf("Dummy%d", i+1)
-		if err := session.Game.AddDummy(dummyID, dummyName); err != nil {
+		if err := sess.Game.AddDummy(dummyID, dummyName); err != nil {
 			b.session.ChannelMessageSend(m.ChannelID, err.Error())
 			return
 		}
-		session.DMChannel[dummyID] = ownerDM
-		session.HasDummy = true
+		sess.SetDMChannel(dummyID, ownerDM)
+		sess.HasDummy = true
 		added++
 	}
 
-	left := session.Desired - session.Game.NumPlayers()
+	left := sess.Desired - sess.Game.NumPlayers()
 	if added == 0 {
 		b.session.ChannelMessageSend(m.ChannelID, "No seats available for dummies.")
 		return
@@ -191,20 +190,17 @@ func (b *Bot) handleDummy(m *discordgo.MessageCreate, args []string) {
 			fmt.Sprintf("Added %d dummy player(s). Waiting for %d more.", added, left))
 		return
 	}
-	if err := session.Game.Start(); err != nil {
+	if err := sess.Game.Start(); err != nil {
 		b.session.ChannelMessageSend(m.ChannelID, err.Error())
 		return
 	}
 	b.manager.MarkStarted(m.ChannelID, b.ownerID)
-	for _, player := range session.Game.PlayersSnapshot() {
+	for _, player := range sess.Game.PlayersSnapshot() {
 		b.dm(player.UserID, "["+player.Name+"] Your hand:\n"+player.HandString()+
 			"\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`.")
 	}
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs with dummies.")
-	b.broadcastEmbed(session, "Threes", "```\n"+session.Game.FormatThreesReport()+"\n```", colorInfo)
-	b.broadcastEmbed(session, "Table", session.Game.TableStateString(), colorInfo)
-	// b.broadcast(session, b.buildAllHandsReport(session))
-	// b.broadcast(session, session.Game.FormatThreesReport())
-	// b.broadcast(session, session.Game.TableStateString())
-	b.sendTurnUI(session)
+	b.broadcastEmbed(sess, "Threes", "```\n"+sess.Game.FormatThreesReport()+"\n```", colorInfo)
+	b.broadcastEmbed(sess, "Table", sess.Game.TableStateString(), colorInfo)
+	b.sendTurnUI(sess)
 }

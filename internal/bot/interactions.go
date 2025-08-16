@@ -1,8 +1,6 @@
 package bot
 
 import (
-	"strings"
-
 	"github.com/bwmarrin/discordgo"
 	"github.com/yoru0/odibot/internal/store"
 )
@@ -14,13 +12,12 @@ func (b *Bot) onInteractionCreate(s *discordgo.Session, ic *discordgo.Interactio
 	data := ic.MessageComponentData()
 	custom := data.CustomID
 
-	parts := strings.SplitN(custom, ":", 3)
-	if len(parts) != 3 {
+	kind, lobbyID, actingID, ok := decodeCustomID(custom)
+	if !ok {
 		return
 	}
-	kind, lobbyID, actingID := parts[0], parts[1], parts[2]
-	sess := b.manager.Get(lobbyID)
 
+	sess := b.manager.Get(lobbyID)
 	if sess == nil || !sess.Started {
 		_ = s.InteractionRespond(ic.Interaction, &discordgo.InteractionResponse{
 			Type: discordgo.InteractionResponseChannelMessageWithSource,
@@ -45,19 +42,12 @@ func (b *Bot) onInteractionCreate(s *discordgo.Session, ic *discordgo.Interactio
 }
 
 func (b *Bot) handleCustomSelect(s *discordgo.Session, ic *discordgo.InteractionCreate, sess *store.Session, actingID string, values []string) {
-	if sess.Selected == nil {
-		sess.Selected = make(map[string][]string)
-	}
-	sess.Selected[actingID] = append([]string(nil), values...)
-	s.InteractionRespond(ic.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseDeferredMessageUpdate,
-	})
+	sess.SetSelected(actingID, values)
+	b.deferResponse(s, ic)
 }
 
 func (b *Bot) handleCustomClear(s *discordgo.Session, ic *discordgo.InteractionCreate, sess *store.Session, actingID string) {
-	if sess.Selected != nil {
-		delete(sess.Selected, actingID)
-	}
+	sess.DeleteSelected(actingID)
 	b.respondWithMessage(s, ic, "Selection cleared.")
 }
 
@@ -144,7 +134,8 @@ func (b *Bot) handleCustomPlay(s *discordgo.Session, ic *discordgo.InteractionCr
 
 }
 
-// * Helper
+// helpers ---
+
 func (b *Bot) respondWithError(s *discordgo.Session, ic *discordgo.InteractionCreate, message string) {
 	b.respondWithMessage(s, ic, message)
 }
