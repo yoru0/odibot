@@ -29,8 +29,8 @@ func New(token, ownerID, annouceCh string) (*Bot, error) {
 		ownerID:    ownerID,
 		announceCh: annouceCh,
 	}
-	s.AddHandler(b.onMessageCreate)
 	s.AddHandler(b.onInteractionCreate)
+	s.AddHandler(b.onMessageCreate)
 	return b, nil
 }
 
