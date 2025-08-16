@@ -2,6 +2,8 @@ package bot
 
 import (
 	"fmt"
+	"log"
+	"os"
 	"strconv"
 	"strings"
 
@@ -47,6 +49,8 @@ func (b *Bot) handleShutdown(m *discordgo.MessageCreate) {
 		return
 	}
 	b.Stop()
+	log.Println("Stopped")
+	os.Exit(0)
 }
 
 func (b *Bot) handleCapsa(m *discordgo.MessageCreate, args []string) {
