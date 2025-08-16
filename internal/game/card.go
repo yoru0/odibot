@@ -116,7 +116,7 @@ func ParseCard(code string) (Card, bool) {
 	return Card{Rank: r, Suit: suit}, true
 }
 
-// SortCardsAsc sorts Rank, then Suit ascending.
+// SortCardsAsc sorts by Rank then Suit ascending.
 func SortCardsAsc(cards []Card) {
 	sort.Slice(cards, func(i, j int) bool {
 		if cards[i].Rank == cards[j].Rank {
@@ -126,7 +126,7 @@ func SortCardsAsc(cards []Card) {
 	})
 }
 
-// SortCardsDesc sorts Rank, then Suit descending.
+// SortCardsDesc sorts by Rank then Suit descending.
 func SortCardsDesc(cards []Card) {
 	sort.Slice(cards, func(i, j int) bool {
 		if cards[i].Rank == cards[j].Rank {

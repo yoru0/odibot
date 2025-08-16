@@ -8,12 +8,12 @@ type Player struct {
 	Name     string
 	Tag      string
 	Hand     []Card
-	Skiped   bool
+	Skipped  bool
 	Finished bool
 	IsDummy  bool
 }
 
-// HasCard returns card index, returns -1 if none is found.
+// HasCard returns the index of card c, or -1 if not found.
 func (p *Player) HasCard(c Card) int {
 	for i, h := range p.Hand {
 		if c == h {
@@ -23,7 +23,7 @@ func (p *Player) HasCard(c Card) int {
 	return -1
 }
 
-// RemoveCards removes list of selected cards.
+// RemoveCards removes the listed cards from the player's hand.
 func (p *Player) RemoveCards(selected []Card) {
 	for _, c := range selected {
 		for i := range p.Hand {
