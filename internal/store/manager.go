@@ -68,13 +68,6 @@ func (m *Manager) MarkStarted(channelID, ownerID string) {
 	for _, p := range players {
 		m.byUser[p.UserID] = s
 	}
-
-	// for _, p := range s.Game.PlayersSnapshot() {
-	// 	m.byUser[p.UserID] = s
-	// }
-	// if s.HasDummy && ownerID != "" {
-	// 	m.byUser[ownerID] = s
-	// }
 }
 
 // Delete removes a Session by its lobby channelID.

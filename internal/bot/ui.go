@@ -117,26 +117,3 @@ func prettyFromCodes(codes []string) string {
 	}
 	return strings.Join(out, " ")
 }
-
-// func (b *Bot) buildAllHandsReport(sess *store.Session) string {
-// 	players := sess.Game.PlayersSnapshot()
-// 	if len(players) == 0 {
-// 		return ""
-// 	}
-
-// 	maxName := 0
-// 	for _, p := range players {
-// 		if l := len(p.Name); l > maxName {
-// 			maxName = l
-// 		}
-// 	}
-
-// 	var sb strings.Builder
-// 	sb.WriteString("All hands:\n")
-// 	sb.WriteString("```\n")
-// 	for _, p := range players {
-// 		sb.WriteString(fmt.Sprintf("%-*s - %s\n", maxName, p.Name, joinPrettyCards(p.Hand)))
-// 	}
-// 	sb.WriteString("```")
-// 	return sb.String()
-// }
