@@ -266,20 +266,29 @@ func (g *Game) HandSnapshot(userID string) []Card {
 // Internals ---
 
 func (g *Game) advanceTurn() (autoSkipped []string) {
-    for {
-        g.turn = (g.turn + 1) % len(g.players)
-        p := g.players[g.turn]
-        if p.Finished {
-            continue
-        }
-        if g.current.Type != ComboNone && p.Skipped {
-            autoSkipped = append(autoSkipped, p.Name)
-            continue
-        }
-        return
-    }
+	for {
+		g.turn = (g.turn + 1) % len(g.players)
+		p := g.players[g.turn]
+		if p.Finished {
+			continue
+		}
+		if g.current.Type != ComboNone && p.Skipped {
+			autoSkipped = append(autoSkipped, p.Name)
+			continue
+		}
+		return
+	}
 }
 
+func (g *Game) unskippedActiveCount() int {
+	n := 0
+	for _, p := range g.players {
+		if !p.Finished && !p.Skipped {
+			n++
+		}
+	}
+	return n
+}
 
 func (g *Game) activePlayers() int {
 	n := 0
