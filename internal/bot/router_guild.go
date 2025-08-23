@@ -103,9 +103,21 @@ func (b *Bot) handleJoin(m *discordgo.MessageCreate) {
 	}
 	b.manager.MarkStarted(m.ChannelID, b.ownerID)
 
-	for _, player := range sess.Game.PlayersSnapshot() {
-		b.dm(player.UserID, "["+player.Name+"] Your hand:\n"+player.HandString()+
-			"\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`.")
+	for _, p := range sess.Game.PlayersSnapshot() {
+		chID := sess.GetDMChannel(p.UserID)
+		if chID == "" {
+			if id, err := b.dmChannelID(p.UserID); err == nil {
+				chID = id
+				sess.SetDMChannel(p.UserID, id)
+			} else {
+				continue
+			}
+		}
+
+		hand := sess.Game.HandSnapshot(p.UserID)
+		title := fmt.Sprintf("[%s] Your hand", p.Name)
+		desc := joinPrettyCards(hand) + "\n\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`."
+		b.sendEmbed(chID, title, desc, colorInfo)
 	}
 
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs. All further actions happen in private messages.")
@@ -195,9 +207,21 @@ func (b *Bot) handleDummy(m *discordgo.MessageCreate, args []string) {
 		return
 	}
 	b.manager.MarkStarted(m.ChannelID, b.ownerID)
-	for _, player := range sess.Game.PlayersSnapshot() {
-		b.dm(player.UserID, "["+player.Name+"] Your hand:\n"+player.HandString()+
-			"\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`.")
+	for _, p := range sess.Game.PlayersSnapshot() {
+		chID := sess.GetDMChannel(p.UserID)
+		if chID == "" {
+			if id, err := b.dmChannelID(p.UserID); err == nil {
+				chID = id
+				sess.SetDMChannel(p.UserID, id)
+			} else {
+				continue
+			}
+		}
+
+		hand := sess.Game.HandSnapshot(p.UserID)
+		title := fmt.Sprintf("[%s] Your hand", p.Name)
+		desc := joinPrettyCards(hand) + "\n\nUse: `play <cards>`, `skip`, `hand`, `table`, `quit`."
+		b.sendEmbed(chID, title, desc, colorInfo)
 	}
 	b.session.ChannelMessageSend(m.ChannelID, "Game started in DMs with dummies.")
 	b.broadcastEmbed(sess, "Threes", "```\n"+sess.Game.FormatThreesReport()+"\n```", colorInfo)
