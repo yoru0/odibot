@@ -3,6 +3,7 @@ package game
 import (
 	"errors"
 	"fmt"
+	"strings"
 )
 
 // Start starts the game.
@@ -111,10 +112,25 @@ func (g *Game) Play(userID string, codes []string) (string, error) {
 			}
 			return fmt.Sprintf("%s plays %s and finishes. Game over.", cp.Name, comboString(combo)), nil
 		}
+
+		// Not game over: advance and report auto-skips, if any.
+		autos := g.advanceTurn()
+		msg := fmt.Sprintf("%s plays %s and finishes.", cp.Name, comboString(combo))
+		if len(autos) > 0 {
+			msg += " " + strings.Join(autos, ", ") + " auto-skipped."
+		}
+		msg += " Next: " + g.players[g.turn].Name
+		return msg, nil
 	}
 
-	g.advanceTurn()
-	return fmt.Sprintf("%s plays %s. Next: %s", cp.Name, comboString(combo), g.players[g.turn].Name), nil
+	// Normal flow: advance and include auto-skip info.
+	autos := g.advanceTurn()
+	msg := fmt.Sprintf("%s plays %s.", cp.Name, comboString(combo))
+	if len(autos) > 0 {
+		msg += " " + strings.Join(autos, ", ") + " auto-skipped."
+	}
+	msg += " Next: " + g.players[g.turn].Name
+	return msg, nil
 }
 
 // Skip handles a player skipping their turn.
