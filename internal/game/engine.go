@@ -10,9 +10,11 @@ import (
 func (g *Game) Start() error {
 	g.mu.Lock()
 	defer g.mu.Unlock()
+
 	if g.started {
 		return errors.New("already started")
 	}
+
 	if len(g.players) < 3 {
 		return errors.New("need at least 3 players")
 	}
@@ -25,6 +27,7 @@ func (g *Game) Start() error {
 		player.Skipped = false
 		player.Finished = false
 	}
+
 	g.handSize = len(hands[0])
 
 	start := 0
@@ -56,6 +59,7 @@ func (g *Game) Start() error {
 func (g *Game) Play(userID string, codes []string) (string, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
+
 	if !g.started {
 		return "", errors.New("game not started")
 	}
@@ -64,6 +68,7 @@ func (g *Game) Play(userID string, codes []string) (string, error) {
 	if cp.UserID != userID {
 		return "", errors.New("not your turn")
 	}
+
 	if len(codes) == 0 {
 		return "", errors.New("provide cards to play, e.g.`play 2H 2S`")
 	}
@@ -88,6 +93,7 @@ func (g *Game) Play(userID string, codes []string) (string, error) {
 	if err != nil {
 		return "", err
 	}
+
 	if g.current.Type != ComboNone && !Beats(combo, g.current) {
 		return "", errors.New("your combo does not beat the table")
 	}
@@ -137,29 +143,43 @@ func (g *Game) Play(userID string, codes []string) (string, error) {
 func (g *Game) Skip(userID string) (string, error) {
 	g.mu.Lock()
 	defer g.mu.Unlock()
+
 	if !g.started {
 		return "", errors.New("game not started")
 	}
+
 	cp := g.players[g.turn]
 	if cp.UserID != userID {
 		return "", errors.New("not your turn")
 	}
+
 	if g.current.Type == ComboNone {
-		return "", errors.New("cannot skip on an empty table")
+		return "", errors.New("table is empty; you must lead")
+	}
+
+	if cp.Skipped {
+		return "", errors.New("you already skipped this round; wait until the table resets")
 	}
 
 	cp.Skipped = true
 	g.skipsInRow++
-	g.advanceTurn()
 
-	if g.skipsInRow >= g.activePlayers()-1 {
+	if g.unskippedActiveCount() == 1 {
 		g.current = Combo{Type: ComboNone}
 		g.skipsInRow = 0
 		g.resetAllSkips()
+
 		g.turn = g.lead
-		g.advanceTurn()
+
 		leader := g.players[g.turn].Name
 		return fmt.Sprintf("%s skips. Table cleared. %s to lead.", cp.Name, leader), nil
 	}
-	return fmt.Sprintf("%s skips. Next: %s", cp.Name, g.players[g.turn].Name), nil
+
+	autos := g.advanceTurn()
+	msg := fmt.Sprintf("%s skips.", cp.Name)
+	if len(autos) > 0 {
+		msg += " " + strings.Join(autos, ", ") + " auto-skipped."
+	}
+	msg += " Next: " + g.players[g.turn].Name
+	return msg, nil
 }
