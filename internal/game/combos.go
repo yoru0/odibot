@@ -2,7 +2,6 @@ package game
 
 import (
 	"errors"
-	"fmt"
 )
 
 type ComboType int
@@ -78,7 +77,6 @@ func Beats(a, b Combo) bool {
 		if a.KeySuit != b.KeySuit {
 			return a.KeySuit > b.KeySuit
 		}
-		fmt.Println(a.KeyRank, b.KeyRank)
 		return a.KeyRank > b.KeyRank
 	}
 	return false
@@ -142,7 +140,6 @@ func flush(cards []Card) (Combo, bool) {
 		return Combo{}, false
 	}
 	SortCardsDesc(c)
-	fmt.Println()
 	return Combo{
 		Type:    ComboFlush,
 		Cards:   c,
