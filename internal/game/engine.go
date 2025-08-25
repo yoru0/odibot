@@ -15,17 +15,18 @@ func (g *Game) Start() error {
 		return errors.New("already started")
 	}
 
-	if len(g.players) < 3 {
-		return errors.New("need at least 3 players")
+	if len(g.players) < 2 || len(g.players) > 4 {
+		return errors.New("players must be 2 or 4")
 	}
 
 	d := NewDeck()
 	d.Shuffle()
 	hands := d.Deal(len(g.players))
-	for i, player := range g.players {
-		player.Hand = hands[i]
-		player.Skipped = false
-		player.Finished = false
+	for i, p := range g.players {
+		p.Hand = hands[i]
+		SortCardsAsc(p.Hand)
+		p.Skipped = false
+		p.Finished = false
 	}
 
 	g.handSize = len(hands[0])
