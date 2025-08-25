@@ -1,0 +1,46 @@
+name: Run bot on demand
+
+on:
+  workflow_dispatch:
+    inputs:
+      duration_minutes:
+        description: "How long to keep the bot running"
+        default: "240"   # 4 hours
+        required: true
+
+concurrency:
+  group: odibot-singleton
+  cancel-in-progress: true
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: "1.22"
+
+      - name: Build
+        run: go build -o odibot .
+
+      - name: Run bot
+        env:
+          DISCORD_TOKEN: ${{ secrets.DISCORD_TOKEN }}
+          DISCORD_USER_ID: ${{ secrets.DISCORD_USER_ID }}
+          DISCORD_CHANNEL_ID: ${{ secrets.DISCORD_CHANNEL_ID }}
+          TZ: Asia/Jakarta
+        run: |
+          ./odibot &
+          PID=$!
+          dur=${{ github.event.inputs.duration_minutes }}
+          trap "kill $PID; exit 0" INT TERM
+          for i in $(seq "$dur" -1 1); do
+            if ! kill -0 $PID 2>/dev/null; then exit 0; fi
+            sleep 60
+          done
+          kill $PID
+          wait $PID || true
