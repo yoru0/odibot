@@ -1,2 +1,15 @@
+# binaries
+out
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# dependency directories
+/vendor/
+bin/
+build/
+
 # env file
 .env
