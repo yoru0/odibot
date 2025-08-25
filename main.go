@@ -11,10 +11,7 @@ import (
 )
 
 func main() {
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal("Error loading .env file")
-	}
+	_ = godotenv.Load()
 
 	annouceCh := os.Getenv("DISCORD_CHANNEL_ID")
 	ownerID := os.Getenv("DISCORD_USER_ID")
