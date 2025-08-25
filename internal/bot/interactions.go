@@ -9,9 +9,9 @@ func (b *Bot) onInteractionCreate(s *discordgo.Session, ic *discordgo.Interactio
 	if ic.Type != discordgo.InteractionMessageComponent {
 		return
 	}
+
 	data := ic.MessageComponentData()
 	custom := data.CustomID
-
 	kind, lobbyID, actingID, ok := decodeCustomID(custom)
 	if !ok {
 		return
@@ -57,10 +57,12 @@ func (b *Bot) handleCustomSkip(s *discordgo.Session, ic *discordgo.InteractionCr
 		b.respondWithError(s, ic, "Unknown clicker.")
 		return
 	}
+
 	currID, _, currIsDummy := sess.Game.CurrentPlayerInfo()
 	if clicker == b.ownerID && currIsDummy {
 		actingID = currID
 	}
+
 	if clicker != actingID && clicker != b.ownerID {
 		b.respondWithError(s, ic, "Not your turn.")
 		return
@@ -82,6 +84,12 @@ func (b *Bot) handleCustomSkip(s *discordgo.Session, ic *discordgo.InteractionCr
 	})
 
 	b.broadcast(sess, msg)
+	if sess.Game.IsOver() {
+		b.broadcast(sess, "Game over. Standings:\n"+sess.Game.ResultsString())
+		b.manager.Delete(sess.LobbyChannelID)
+		return
+	}
+
 	b.sendTurnUI(sess)
 }
 
@@ -91,10 +99,12 @@ func (b *Bot) handleCustomPlay(s *discordgo.Session, ic *discordgo.InteractionCr
 		b.respondWithError(s, ic, "Unknown clicker.")
 		return
 	}
+
 	currID, _, currIsDummy := sess.Game.CurrentPlayerInfo()
 	if clicker == b.ownerID && currIsDummy {
 		actingID = currID
 	}
+
 	if clicker != actingID && clicker != b.ownerID {
 		b.respondWithError(s, ic, "Not your turn.")
 		return
@@ -105,6 +115,7 @@ func (b *Bot) handleCustomPlay(s *discordgo.Session, ic *discordgo.InteractionCr
 		b.respondWithError(s, ic, "Select 1-5 cards first.")
 		return
 	}
+
 	b.deferResponse(s, ic)
 
 	msg, err := sess.Game.Play(actingID, values)
@@ -113,8 +124,7 @@ func (b *Bot) handleCustomPlay(s *discordgo.Session, ic *discordgo.InteractionCr
 		return
 	}
 
-	// Clear selection after a successful play.
-	delete(sess.Selected, actingID)
+	sess.DeleteSelected(actingID)
 
 	// Disable the components.
 	b.session.ChannelMessageEditComplex(&discordgo.MessageEdit{
@@ -131,20 +141,16 @@ func (b *Bot) handleCustomPlay(s *discordgo.Session, ic *discordgo.InteractionCr
 	}
 
 	b.sendTurnUI(sess)
-
 }
 
-// helpers ---
-
-func (b *Bot) respondWithError(s *discordgo.Session, ic *discordgo.InteractionCreate, message string) {
-	b.respondWithMessage(s, ic, message)
+func (b *Bot) respondWithError(s *discordgo.Session, ic *discordgo.InteractionCreate, msg string) {
+	title := "Error"
+	b.respondEmbed(s, ic, title, msg, colorError)
 }
 
-func (b *Bot) respondWithMessage(s *discordgo.Session, ic *discordgo.InteractionCreate, message string) {
-	s.InteractionRespond(ic.Interaction, &discordgo.InteractionResponse{
-		Type: discordgo.InteractionResponseChannelMessageWithSource,
-		Data: &discordgo.InteractionResponseData{Content: message},
-	})
+func (b *Bot) respondWithMessage(s *discordgo.Session, ic *discordgo.InteractionCreate, msg string) {
+	title := "Info"
+	b.respondEmbed(s, ic, title, msg, colorInfo)
 }
 
 func (b *Bot) deferResponse(s *discordgo.Session, ic *discordgo.InteractionCreate) {

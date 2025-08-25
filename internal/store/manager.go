@@ -23,6 +23,7 @@ func NewManager() *Manager {
 func (m *Manager) NewSession(channelID string, desired int) *Session {
 	m.mu.Lock()
 	defer m.mu.Unlock()
+	
 	if s, ok := m.byChannel[channelID]; ok {
 		return s
 	}
@@ -35,6 +36,7 @@ func (m *Manager) NewSession(channelID string, desired int) *Session {
 func (m *Manager) Has(channelID string) bool {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+
 	_, ok := m.byChannel[channelID]
 	return ok
 }
@@ -43,6 +45,7 @@ func (m *Manager) Has(channelID string) bool {
 func (m *Manager) Get(channelID string) *Session {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+
 	return m.byChannel[channelID]
 }
 
@@ -50,6 +53,7 @@ func (m *Manager) Get(channelID string) *Session {
 func (m *Manager) GetByUser(userID string) *Session {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
+
 	return m.byUser[userID]
 }
 
